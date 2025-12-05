@@ -20,15 +20,45 @@ async function main() {
     console.log("starting TISS ECTS Charts script");
     const table = await waitForTable();
     const data = fillData(table, filterOutSemester, semesterToFilterOut); //
+    const studycodes  = getStudyCodes(table);
     const ects_data = extractEctsData(data);
     style();
-    document.querySelector("#certificateList\\:studentInfoPanel").appendChild(canvas_container);
 
+    const querySelector = document.querySelector("#certificateList\\:studentInfoPanel");
+
+    let selectcontainerdiv = document.createElement("div");
+
+    let selectcontainer = document.createElement("select");
+
+    selectcontainerdiv = querySelector.appendChild(selectcontainerdiv);
+
+    selectcontainer = selectcontainerdiv.appendChild(selectcontainer);
+
+    selectcontainer.id = "studycodeselect";
+
+    selectcontainer.addEventListener("change", onSelectedStudyCode);
+
+    studycodes.forEach(studycode => {
+        const optioncontainer = document.createElement("option");
+        const option = selectcontainer.appendChild(optioncontainer);
+        option.value = studycode;
+        option.text = studycode;
+        if(studycode == getCurrentStudy()){
+            option.selected = true;
+        }
+    });
+
+    querySelector.appendChild(canvas_container);
     const ects_line_chart = makeEctsLineChart(ects_data);
     const grade_line_chart = makeGradeLineChart(ects_data);
     const ects_cumsum_chart = makeEctsCumsumChart(ects_data);
 
     console.log("finished TISS ECTS Charts script");
+}
+
+function onSelectedStudyCode(event){
+    localStorage.setItem("studypreference", event.target.value);
+    window.location.reload();
 }
 
 function waitForTable() {
@@ -81,8 +111,14 @@ function fillData(table, customFilter, semesterToFilter) {
         throw new Error("Table is undefined - cannot fill data");
     }
     var data = [];
+    var currentstudycode = getCurrentStudy();
     for ( var i = 1; i < table.rows.length; i++ ) {
-        if (table.rows[i].cells[4].innerText == "") continue;
+        if (i==1 && currentstudycode == null) {
+        localStorage.setItem("studypreference", table.rows[i].cells[6].innerText);
+        currentstudycode = table.rows[i].cells[6].innerText;
+        }
+        if (table.rows[i].cells[4].innerText == "" 
+            || table.rows[i].cells[6].innerText != currentstudycode) continue;
         data.push({
             'hours': table.rows[i].cells[3].innerText,
             'ects': parseFloat(table.rows[i].cells[4].innerText),
@@ -98,6 +134,18 @@ function fillData(table, customFilter, semesterToFilter) {
     }
     console.log("filled data table")
     return data;
+}
+
+function getCurrentStudy(){
+    return localStorage.getItem("studypreference")
+}
+
+function getStudyCodes(table){
+    var studycodes = new Set();
+    for ( var i = 1; i < table.rows.length; i++ ) {
+    studycodes.add(table.rows[i].cells[6].innerText);
+    }   
+    return studycodes;
 }
 
 function findTerm(date) {
