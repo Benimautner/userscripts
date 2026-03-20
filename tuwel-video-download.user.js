@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name        Tuwel Video Download
-// @namespace   Violentmonkey Scripts
+// @namespace   https://fsinf.at
 // @match       https://tuwel.tuwien.ac.at/mod/opencast/view.php*
 // @grant       none
 // @version     1.0
 // @author      FSINF
 // @description 3/14/2026, 5:18:42 PM
+// @downloadURL https://fsinf.at/userscripts/tuwel-video-download.user.js
+// @updateURL   https://fsinf.at/userscripts/tuwel-video-download.user.js
 // ==/UserScript==
 
 function parseEpisodeStreams() {
