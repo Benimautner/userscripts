@@ -14,6 +14,7 @@ function parseEpisodeStreams() {
     episode && Array.isArray(episode.streams) ? episode.streams : [];
   const parsed = [];
 
+  // extract mp4 sources from streams
   streams.forEach((stream, streamIndex) => {
     const sources = stream && stream.sources ? stream.sources : {};
     const streamName =
@@ -32,6 +33,7 @@ function parseEpisodeStreams() {
     });
   });
 
+  // remove duplicates
   return parsed.filter(function (item, index) {
     return (
       parsed.findIndex(function (other) {
@@ -54,6 +56,7 @@ function startDownload(url) {
 function injectDownloadButton() {
   let playerWrapper = document.querySelector(".player-wrapper");
   if (!playerWrapper) {
+    // fallback for insertion of button
     playerWrapper = document.querySelector(".page-context-header");
     if (!playerWrapper) {
       return;
