@@ -3,7 +3,7 @@
 // @namespace   https://fsinf.at
 // @match       https://tuwel.tuwien.ac.at/mod/opencast/view.php*
 // @grant       none
-// @version     1.0
+// @version     1.1
 // @author      FSINF
 // @description 3/14/2026, 5:18:42 PM
 // @downloadURL https://fsinf.at/userscripts/tuwel-video-download.user.js
@@ -45,6 +45,31 @@ function parseEpisodeStreams() {
   });
 }
 
+function parseCaptions() {
+  const episode = window.episode;
+  const captions =
+    episode && Array.isArray(episode.captions) ? episode.captions : [];
+  const parsed = [];
+
+  // extract sources from captions
+  captions.forEach((caption, captionIndex) => {
+    const captionName =
+      caption && caption.text ? caption.text : `caption ${captionIndex + 1}`;
+
+    if (caption && caption.url) {
+      const lang = caption.lang ? caption.lang : "?";
+      parsed.push({
+        label: `${captionName} (${lang})`,
+        src: caption.url,
+      });
+    }
+  });
+
+  return parsed;
+}
+
+
+
 function startDownload(url) {
   const a = document.createElement("a");
   a.href = url;
@@ -55,36 +80,22 @@ function startDownload(url) {
   a.remove();
 }
 
-function injectDownloadButton() {
-  let playerWrapper = document.querySelector(".player-wrapper");
-  if (!playerWrapper) {
-    // fallback for insertion of button
-    playerWrapper = document.querySelector(".page-context-header");
-    if (!playerWrapper) {
-      return;
-    }
-  }
-
-  const streams = parseEpisodeStreams();
-  if (!streams.length) {
-    return;
-  }
-
+function createDownloadButton(sources, buttonName) {
   const container = document.createElement("div");
   container.style.marginBottom = "12px";
 
   const select = document.createElement("select");
   select.style.marginRight = "8px";
 
-  streams.forEach((stream) => {
+  sources.forEach((source) => {
     const option = document.createElement("option");
-    option.value = stream.src;
-    option.textContent = stream.label;
+    option.value = source.src;
+    option.textContent = source.label;
     select.appendChild(option);
   });
 
   const button = document.createElement("button");
-  button.textContent = "Download selected stream";
+  button.textContent = buttonName;
   button.type = "button";
   button.addEventListener("click", function () {
     const selectedOption = select.options[select.selectedIndex];
@@ -97,11 +108,40 @@ function injectDownloadButton() {
   container.appendChild(select);
   container.appendChild(button);
 
-  playerWrapper.parentNode.insertBefore(container, playerWrapper);
+  return container;
 }
 
+
+function injectButtons() {
+  let playerWrapper = document.querySelector(".player-wrapper");
+  if (!playerWrapper) {
+    // fallback for insertion of button
+    playerWrapper = document.querySelector(".page-context-header");
+    if (!playerWrapper) {
+      return;
+    }
+  }
+
+
+  const streams = parseEpisodeStreams();
+  if (!streams.length) {
+    return;
+  }
+
+  const captions = parseCaptions();
+
+  streamDownloadContainer = createDownloadButton(streams, "Download selected stream");
+  captionsDownloadContainer = createDownloadButton(captions, "Download selected captions");
+
+  playerWrapper.parentNode.insertBefore(streamDownloadContainer, playerWrapper);
+  playerWrapper.parentNode.insertBefore(captionsDownloadContainer, playerWrapper);
+
+}
+
+
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", injectDownloadButton);
+  document.addEventListener("DOMContentLoaded", injectButtons);
 } else {
-  injectDownloadButton();
+  injectButtons();
 }
