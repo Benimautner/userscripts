@@ -5,7 +5,7 @@
 // @grant       GM_xmlhttpRequest
 // @connect     tuwien.ac.at
 // @connect     raw.githubusercontent.com
-// @version     1.2
+// @version     1.3
 // @author      FSINF
 // @description 3/14/2026, 5:18:42 PM
 // @downloadURL https://fsinf.at/userscripts/tuwel-video-download.user.js
